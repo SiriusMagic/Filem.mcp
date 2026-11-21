@@ -2,6 +2,7 @@ package com.zirakusa.filem.ui.screens
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.zirakusa.filem.R
 import com.zirakusa.filem.data.Category
 import com.zirakusa.filem.data.FileItem
 import com.zirakusa.filem.data.FileRules
@@ -34,13 +36,19 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+val categoryNames = mapOf(Category.DOWNLOADS to R.string.cat_downloads, Category.RECEIVED to R.string.cat_received,
+    Category.IMAGES to R.string.cat_images, Category.VIDEOS to R.string.cat_videos, Category.AUDIO to R.string.cat_audio,
+    Category.DOCUMENTS to R.string.cat_documents, Category.APPS to R.string.cat_apps, Category.ZIPS to R.string.cat_zips)
+
 fun categoryIcon(category: Category?): ImageVector = when (category) {
     Category.DOWNLOADS -> Icons.Outlined.Download
+    Category.RECEIVED -> Icons.Outlined.MoveToInbox
+    Category.ZIPS -> Icons.Outlined.FolderZip
     Category.IMAGES -> Icons.Outlined.Image
     Category.VIDEOS -> Icons.Outlined.Movie
     Category.AUDIO -> Icons.Outlined.MusicNote
     Category.DOCUMENTS -> Icons.Outlined.Description
-    Category.APPS -> Icons.Outlined.Apps
+    Category.APPS -> Icons.Outlined.Android
     null -> Icons.AutoMirrored.Outlined.InsertDriveFile
 }
 
@@ -52,11 +60,13 @@ fun friendlyDate(ms: Long, now: Long = System.currentTimeMillis()): String {
     return SimpleDateFormat(if (year == thisYear) "d MMM" else "d MMM yyyy", Locale.getDefault()).format(Date(ms)).replace(".", "")
 }
 
-/** Folder, photo thumbnail or the category icon, on a rounded tile. */
-@Composable fun FileIcon(item: FileItem, root: File, size: Dp, modifier: Modifier = Modifier) {
+/** Folder, photo thumbnail, the app's own icon (APK) or the category icon, on a rounded tile. */
+@Composable fun FileIcon(item: FileItem, root: File, size: Dp, modifier: Modifier = Modifier, apk: ApkInfo? = rememberApkInfo(item, root)) {
+    val icon = apk?.icon
     Box(modifier.size(size).clip(RoundedCornerShape(size / 4)).background(FilemColors.Tile), contentAlignment = Alignment.Center) {
         if (item.category == Category.IMAGES) AsyncImage(File(root, item.path), null,
             Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        else if (icon != null) Image(icon, null, Modifier.size(size * 0.74f))
         else Icon(if (item.isDir) Icons.Filled.Folder else categoryIcon(item.category), null, Modifier.size(size * 0.38f),
             tint = FilemColors.Folder)
     }
@@ -68,10 +78,12 @@ fun friendlyDate(ms: Long, now: Long = System.currentTimeMillis()): String {
     Row(Modifier.fillMaxWidth().combinedClickable(onClick = onClick, onLongClick = onLongClick)
         .background(if (selected) FilemColors.Chip else FilemColors.Background).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Box { FileIcon(item, root, 64.dp); if (selected) Check(Modifier.align(Alignment.BottomEnd)) }
+        val apk = rememberApkInfo(item, root)
+        Box { FileIcon(item, root, 64.dp, apk = apk); if (selected) Check(Modifier.align(Alignment.BottomEnd)) }
         Column(Modifier.weight(1f).padding(start = 18.dp)) {
             Text(item.name, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = FilemColors.Text)
-            Text(subtitle(item), fontSize = 14.sp, color = FilemColors.Muted, maxLines = 1)
+            Text(listOfNotNull(apk?.title, subtitle(item)).joinToString(" • "), fontSize = 14.sp, color = FilemColors.Muted,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (!selecting) menu()
     }

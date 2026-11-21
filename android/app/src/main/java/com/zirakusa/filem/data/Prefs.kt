@@ -2,8 +2,9 @@ package com.zirakusa.filem.data
 
 import android.content.Context
 import androidx.core.content.edit
+import org.json.JSONArray
 
-/** «Destacados» and the screen preferences (view, order, hidden files), on this phone only. */
+/** «Favoritos», «Buscar historial» and the screen preferences (view, order, hidden files), on this phone only. */
 class Prefs(context: Context) {
     private val p = context.getSharedPreferences("filem", Context.MODE_PRIVATE)
 
@@ -19,4 +20,9 @@ class Prefs(context: Context) {
     var showHidden: Boolean
         get() = p.getBoolean("hidden", false)
         set(v) = p.edit { putBoolean("hidden", v) }
+    /** Past searches, newest first (at most [FileRules.HISTORY_MAX]). */
+    var history: List<String>
+        get() = runCatching { JSONArray(p.getString("history", "[]")).let { a -> (0 until a.length()).map { a.getString(it) } } }
+            .getOrDefault(emptyList())
+        set(v) = p.edit { putString("history", JSONArray(v.take(FileRules.HISTORY_MAX)).toString()) }
 }

@@ -3,27 +3,37 @@
     <string name="back">Atrás</string>
     <string name="cancel">Cancelar</string>
     <string name="close">Cerrar</string>
-    <string name="menu">Menú</string>
     <string name="more_options">Más opciones</string>
     <string name="search">Buscar</string>
-    <string name="search_hint">Buscar en Filem</string>
-    <string name="recent">Recientes</string>
-    <string name="see_all">Ver todos</string>
+    <string name="search_hint">Buscar archivos</string>
     <string name="recently_modified">Modificado recientemente</string>
-    <string name="categories">Categorías</string>
-    <string name="collections">Colecciones</string>
-    <string name="all_storage">Todo el almacenamiento</string>
     <string name="internal_storage">Almacenamiento interno</string>
-    <string name="free_space">Libre: %1$s</string>
-    <string name="starred">Destacados</string>
     <string name="trash">Papelera</string>
     <string name="settings">Configuración</string>
+    <string name="tab_recent">Reciente</string>
+    <string name="tab_browser">Navegador</string>
+    <string name="local_files">Archivos locales</string>
+    <string name="location">Ubicación</string>
+    <string name="my_phone">Mi teléfono</string>
+    <string name="recently_deleted">Recientemente eliminado</string>
+    <string name="favorites">Favoritos</string>
+    <string name="cat_zips">Zips</string>
+    <string name="cat_received">Recibido</string>
+    <string name="yesterday">Ayer</string>
+    <string name="filter">Filtrar</string>
+    <string name="expand">Mostrar</string>
+    <string name="collapse">Ocultar</string>
+    <string name="show_in_folder">Mostrar en la carpeta</string>
+    <string name="search_history">Buscar historial</string>
+    <string name="clear_history">Borrar historial</string>
+    <string name="clear">Borrar</string>
+    <string name="install_allow">Permite que Filem instale apps; al volver se abrirá el instalador.</string>
     <string name="cat_downloads">Descargas</string>
     <string name="cat_images">Imágenes</string>
     <string name="cat_videos">Videos</string>
     <string name="cat_audio">Audio</string>
     <string name="cat_documents">Documentos</string>
-    <string name="cat_apps">Apps</string>
+    <string name="cat_apps">APKs</string>
     <string name="view_grid">Ver en cuadrícula</string>
     <string name="view_list">Ver en lista</string>
     <string name="select_all">Seleccionar todo</string>
@@ -32,12 +42,15 @@
     <string name="new_folder">Carpeta nueva</string>
     <string name="create_folder">Crear carpeta</string>
     <string name="folder_name_hint">Escribe el nombre de la nueva carpeta</string>
+    <string name="open_with">Abrir con…</string>
+    <string name="open_with_ours">Recomendada</string>
+    <string name="other_apps">Otras apps</string>
     <string name="rename">Cambiar nombre</string>
     <string name="open">Abrir</string>
     <string name="copy_to">Copiar a…</string>
     <string name="move_to">Mover a…</string>
-    <string name="star">Destacar</string>
-    <string name="unstar">Quitar de destacados</string>
+    <string name="star">Añadir a favoritos</string>
+    <string name="unstar">Quitar de favoritos</string>
     <string name="share">Compartir</string>
     <string name="details">Información</string>
     <string name="move_to_trash">Mover a la papelera</string>
@@ -116,4 +129,5 @@
     <plurals name="moving"><item quantity="one">Moviendo %1$d elemento</item><item quantity="many">Moviendo %1$d elementos</item><item quantity="other">Moviendo %1$d elementos</item></plurals>
     <plurals name="selected"><item quantity="one">%1$d seleccionado</item><item quantity="many">%1$d seleccionados</item><item quantity="other">%1$d seleccionados</item></plurals>
     <plurals name="trash_title"><item quantity="one">¿Mover %1$d elemento a la papelera?</item><item quantity="many">¿Mover %1$d elementos a la papelera?</item><item quantity="other">¿Mover %1$d elementos a la papelera?</item></plurals>
+    <plurals name="recent_footer"><item quantity="one">%1$d elemento · Se muestran solo los archivos añadidos en los últimos 30 días</item><item quantity="many">%1$d elementos · Se muestran solo los archivos añadidos en los últimos 30 días</item><item quantity="other">%1$d elementos · Se muestran solo los archivos añadidos en los últimos 30 días</item></plurals>
 </resources>

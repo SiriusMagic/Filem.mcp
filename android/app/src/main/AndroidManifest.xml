@@ -8,12 +8,26 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <!-- Tapping an .apk opens the phone's installer (Android asks the user to allow Filem the first time). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- «Redireccionar a Hub»: only apps signed with the same key (Gateway Hub) get this permission. -->
     <permission android:name="com.zirakusa.gatewayhub.permission.LINK" android:protectionLevel="signature"
         android:label="@string/hub_link_permission" />
 
-    <!-- «Ir al Hub» opens the Gateway Hub app. -->
-    <queries><package android:name="com.zirakusa.gatewayhub" /></queries>
+    <!-- «Ir al Hub» opens the Gateway Hub app. «Abrir con…» lists the apps that open each type (ours first:
+         Stone Video, Stone, Luma, Notas) instead of going straight to Android's chooser. -->
+    <queries>
+        <package android:name="com.zirakusa.gatewayhub" />
+        <package android:name="com.zirakusa.stone.video" />
+        <package android:name="com.zirakusa.stone.kotlin.preview" />
+        <package android:name="app.luma.gallery" />
+        <package android:name="com.zirakusa.notas" />
+        <intent><action android:name="android.intent.action.VIEW" /><data android:mimeType="video/*" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:mimeType="audio/*" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:mimeType="image/*" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:mimeType="text/*" /></intent>
+        <intent><action android:name="android.intent.action.VIEW" /><data android:mimeType="application/*" /></intent>
+    </queries>
 
     <application
         android:allowBackup="false"

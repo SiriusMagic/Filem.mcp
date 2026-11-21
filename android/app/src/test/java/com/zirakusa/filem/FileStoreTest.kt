@@ -74,4 +74,23 @@ class FileStoreTest {
         assertEquals(1, cats.getValue(Category.IMAGES).second) // Android/ is skipped
         assertEquals(5L to 1, cats.getValue(Category.DOWNLOADS))
     }
+
+    @Test fun zipsReceivedAndSince() {
+        file("Download/fotos.zip", "zz"); file("Bluetooth/foto.jpg", "123"); file("Download/Telegram/doc.pdf", "4")
+        file("Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-1.jpg", "56"); file("DCIM/otra.jpg")
+        assertEquals(listOf("Download", "Android/media/com.whatsapp/WhatsApp/Media", "Bluetooth"), store.placeFolders(Category.RECEIVED))
+        assertEquals(listOf("Download/fotos.zip"), store.search("", Category.ZIPS).map { it.path })
+        val received = store.search("", Category.RECEIVED).map { it.path }.toSet()
+        assertEquals(setOf("Download/fotos.zip", "Bluetooth/foto.jpg", "Download/Telegram/doc.pdf",
+            "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/IMG-1.jpg"), received)
+        assertEquals(listOf("Bluetooth/foto.jpg"), store.search("foto", Category.RECEIVED, under = "Bluetooth").map { it.path })
+        assertEquals(listOf("Download/Telegram/doc.pdf"), store.search("", Category.DOWNLOADS, under = "Download/Telegram").map { it.path })
+        val cats = store.categories()
+        assertEquals(2L to 1, cats.getValue(Category.ZIPS))
+        assertEquals(8L to 4, cats.getValue(Category.RECEIVED))
+        assertEquals(3L to 2, cats.getValue(Category.DOWNLOADS))
+        File(root, "DCIM/otra.jpg").setLastModified(1_000)
+        assertEquals(listOf("DCIM/otra.jpg"), store.recent(10).map { it.path }.filter { it.startsWith("DCIM") })
+        assertTrue(store.recent(10, sinceMs = 10_000).none { it.path == "DCIM/otra.jpg" })
+    }
 }

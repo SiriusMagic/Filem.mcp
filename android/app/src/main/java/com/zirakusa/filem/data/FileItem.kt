@@ -7,15 +7,24 @@ data class FileItem(val path: String, val name: String, val isDir: Boolean, val 
     val extension: String get() = if (isDir) "" else name.substringAfterLast('.', "").lowercase()
 }
 
-/** The home screen's «Categorías». Matched by extension, so they work the same for MCP, search and the phone. */
-enum class Category(val key: String, val extensions: Set<String>) {
-    DOWNLOADS("downloads", emptySet()),
+/**
+ * The «Navegador» categories. Most match by extension, so they work the same for MCP, search and the phone. The
+ * «places» ([folders] not empty) are whole folders instead: «Descargas» (Download) and «Recibido» (Download plus the
+ * usual folders where WhatsApp, Bluetooth and Telegram leave what they receive; only those that exist are used).
+ */
+enum class Category(val key: String, val extensions: Set<String>, val folders: List<String> = emptyList()) {
+    DOWNLOADS("downloads", emptySet(), listOf("Download")),
+    RECEIVED("received", emptySet(), FileRules.RECEIVED_FOLDERS),
     IMAGES("images", setOf("jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "bmp", "svg", "dng", "raw")),
     VIDEOS("videos", setOf("mp4", "mkv", "webm", "3gp", "mov", "avi", "m4v", "ts", "flv", "wmv")),
     AUDIO("audio", setOf("mp3", "m4a", "aac", "flac", "ogg", "opus", "wav", "amr", "mid", "wma")),
     DOCUMENTS("documents", setOf("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "txt",
         "md", "csv", "rtf", "epub", "json", "xml", "html", "htm", "log", "kt", "py", "js", "ts")),
-    APPS("apps", setOf("apk", "apks", "xapk", "aab"));
+    APPS("apps", setOf("apk", "apks", "xapk", "aab")),
+    ZIPS("zips", setOf("zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz"));
+
+    /** A folder category («Descargas», «Recibido»), not an extension one. */
+    val isPlace: Boolean get() = folders.isNotEmpty()
 
     companion object { fun from(key: String?) = entries.firstOrNull { it.key == key } }
 }

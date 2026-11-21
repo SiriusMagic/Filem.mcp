@@ -23,12 +23,15 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.zirakusa.filem.data.FileItem
+import com.zirakusa.filem.data.Opener
+import com.zirakusa.filem.data.Openers
 import com.zirakusa.filem.data.FileStore
 import com.zirakusa.filem.data.Prefs
 import com.zirakusa.filem.mcp.McpMode
 import com.zirakusa.filem.ui.Actions
 import com.zirakusa.filem.ui.FilemApp
 import com.zirakusa.filem.ui.FilesState
+import com.zirakusa.filem.ui.screens.OpenWithDialog
 import com.zirakusa.filem.ui.screens.PermissionScreen
 import com.zirakusa.filem.ui.theme.FilemTheme
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +42,10 @@ import java.io.File
 class MainActivity : ComponentActivity(), Actions {
     private var granted by mutableStateOf(false)
     private lateinit var state: FilesState
+    /** An APK tapped while Filem could not install apps yet: it opens when the user comes back from the setting. */
+    private var pendingApk: FileItem? = null
+    /** «Abrir con…» on screen: the file, its type and the apps that can open it. */
+    private var opening by mutableStateOf<Triple<FileItem, String, List<Opener>>?>(null)
     private val root: File get() = Environment.getExternalStorageDirectory()
     /** Android 8–10: the classic storage permissions. */
     private val legacy = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -56,6 +63,12 @@ class MainActivity : ComponentActivity(), Actions {
         setContent {
             FilemTheme {
                 if (granted) FilemApp(state, this, ::finish) else PermissionScreen(::askPermission)
+                opening?.let { (item, type, apps) ->
+                    OpenWithDialog(item.name, apps, Openers.ours(type), onPick = { app ->
+                        opening = null
+                        try { startActivity(view(item, type).setClassName(app.packageName, app.activity)) } catch (_: Exception) { chooser(item, type) }
+                    }, onOthers = { opening = null; chooser(item, type) }, onDismiss = { opening = null })
+                }
             }
         }
     }
@@ -65,6 +78,7 @@ class MainActivity : ComponentActivity(), Actions {
         val now = hasPermission()
         if (now && !granted) state.refresh()
         granted = now
+        pendingApk?.let { apk -> pendingApk = null; if (packageManager.canRequestPackageInstalls()) install(apk) }
     }
 
     private fun hasPermission() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager()
@@ -78,13 +92,49 @@ class MainActivity : ComponentActivity(), Actions {
     }
 
     private fun uri(path: String) = FileProvider.getUriForFile(this, "$packageName.files", File(root, path))
-    private fun mime(name: String) = MimeTypeMap.getSingleton().getMimeTypeFromExtension(name.substringAfterLast('.', "").lowercase()) ?: "*/*"
+    private fun mime(name: String) = name.substringAfterLast('.', "").lowercase().let {
+        Openers.mime(it, MimeTypeMap.getSingleton().getMimeTypeFromExtension(it))
+    }
+    private fun view(item: FileItem, type: String) = Intent(Intent.ACTION_VIEW).setDataAndType(uri(item.path), type)
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-    /** «Abrir»: the app the user picks for that type (Stone for music and video, Luma for photos…). */
-    override fun open(item: FileItem) {
-        val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri(item.path), mime(item.name)).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        try { startActivity(Intent.createChooser(intent, item.name)) }
+    /** Apps that open this type (visible through the manifest's <queries>), ours first. */
+    private fun openers(intent: Intent, type: String): List<Opener> {
+        val found = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            packageManager.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(0))
+            else @Suppress("DEPRECATION") packageManager.queryIntentActivities(intent, 0)
+        return Openers.order(found.map {
+            Opener(it.activityInfo.packageName, it.activityInfo.name, it.loadLabel(packageManager).toString(),
+                runCatching { it.loadIcon(packageManager) }.getOrNull())
+        }, type, packageName)
+    }
+
+    /** Android's own chooser («Otras apps»). */
+    private fun chooser(item: FileItem, type: String) {
+        try { startActivity(Intent.createChooser(view(item, type), item.name)) }
         catch (_: ActivityNotFoundException) { Toast.makeText(this, R.string.no_app, Toast.LENGTH_SHORT).show() }
+    }
+
+    /** «Abrir con…»: our apps for that type first (Stone Video, Stone, Luma, Notas), then the rest; APKs install. */
+    override fun open(item: FileItem) {
+        if (item.extension == "apk") { install(item); return }
+        val type = mime(item.name)
+        val apps = runCatching { openers(view(item, type), type) }.getOrDefault(emptyList())
+        if (apps.isEmpty()) chooser(item, type) else opening = Triple(item, type, apps)
+    }
+
+    /** Tapping an APK installs it with the phone's installer; the first time Android asks to allow Filem. */
+    private fun install(item: FileItem) {
+        if (!packageManager.canRequestPackageInstalls()) {
+            pendingApk = item
+            Toast.makeText(this, R.string.install_allow, Toast.LENGTH_LONG).show()
+            try { startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, "package:$packageName".toUri())) }
+            catch (_: ActivityNotFoundException) { pendingApk = null }
+            return
+        }
+        val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri(item.path), Openers.APK_MIME)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        try { startActivity(intent) } catch (_: ActivityNotFoundException) { Toast.makeText(this, R.string.no_app, Toast.LENGTH_SHORT).show() }
     }
 
     override fun share(paths: List<String>) {

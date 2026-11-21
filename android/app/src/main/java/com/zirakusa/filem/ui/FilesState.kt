@@ -8,6 +8,8 @@ import com.zirakusa.filem.data.FileItem
 import com.zirakusa.filem.data.FileRules
 import com.zirakusa.filem.data.FileStore
 import com.zirakusa.filem.data.Prefs
+import com.zirakusa.filem.data.RecentGroup
+import com.zirakusa.filem.data.RecentRules
 import com.zirakusa.filem.data.Sort
 import com.zirakusa.filem.data.TrashEntry
 import kotlinx.coroutines.CoroutineDispatcher
@@ -16,11 +18,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Where the user is. Browse and the lists keep their own place in the back stack. */
+/** Where the user is. Browse and the lists keep their own place in the back stack; the two tabs are its bottom. */
 sealed interface Screen {
-    data object Home : Screen
+    data object Navigator : Screen
+    data object Recent : Screen
     data class Browse(val path: String) : Screen
-    data class CategoryList(val category: com.zirakusa.filem.data.Category) : Screen
+    data class CategoryList(val category: Category) : Screen
     data object Starred : Screen
     data object Search : Screen
     data object Trash : Screen
@@ -33,9 +36,9 @@ data class Clip(val paths: List<String>, val move: Boolean)
 
 /** The only owner of Filem's screen state. Screens only draw it and call these functions. */
 class FilesState(val store: FileStore, private val prefs: Prefs?, private val scope: CoroutineScope,
-    private val io: CoroutineDispatcher = Dispatchers.IO) {
+    private val io: CoroutineDispatcher = Dispatchers.IO, private val now: () -> Long = System::currentTimeMillis) {
     private val stack = ArrayDeque<Screen>()
-    var screen by mutableStateOf<Screen>(Screen.Home); private set
+    var screen by mutableStateOf<Screen>(Screen.Navigator); private set
     var items by mutableStateOf(emptyList<FileItem>()); private set
     var loading by mutableStateOf(false); private set
     var grid by mutableStateOf(prefs?.grid ?: false); private set
@@ -43,8 +46,11 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
     var selection by mutableStateOf(emptySet<String>())
     var clip by mutableStateOf<Clip?>(null)
     var message by mutableStateOf<String?>(null)
+    /** «Reciente»: the files of the last 30 days, the type filter and the open groups. */
     var recents by mutableStateOf(emptyList<FileItem>()); private set
-    var categories by mutableStateOf(emptyMap<Category, Pair<Long, Int>>()); private set
+    var recentFilter by mutableStateOf<Category?>(null); private set
+    var expanded by mutableStateOf(setOf(RecentGroup.TODAY)); private set
+    var history by mutableStateOf(prefs?.history ?: emptyList()); private set
     var space by mutableStateOf(0L to 0L); private set
     var trash by mutableStateOf(emptyList<TrashEntry>()); private set
     var starred by mutableStateOf(prefs?.starred() ?: emptySet()); private set
@@ -54,13 +60,22 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
 
     val title: String get() = (screen as? Screen.Browse)?.path?.substringAfterLast('/').orEmpty()
 
+    val recentGroups: Map<RecentGroup, List<FileItem>>
+        get() = RecentRules.group(recents.filter { recentFilter == null || it.category == recentFilter }, now())
+
+    /** The bottom bar: «Reciente» or «Navegador», with an empty back stack. */
+    fun tab(next: Screen) {
+        if (screen == next) return
+        stack.clear(); screen = next; selection = emptySet(); refresh()
+    }
+
     fun go(next: Screen) { stack.addLast(screen); screen = next; selection = emptySet(); items = emptyList(); refresh() }
     fun open(item: FileItem) = go(Screen.Browse(item.path))
 
-    /** Back: leaves selection first, then the previous screen. False when already home. */
+    /** Back: leaves selection first, then the previous screen, then «Reciente» goes to «Navegador». False at the end. */
     fun back(): Boolean {
         if (selection.isNotEmpty()) { selection = emptySet(); return true }
-        screen = stack.removeLastOrNull() ?: return false
+        screen = stack.removeLastOrNull() ?: if (screen == Screen.Recent) Screen.Navigator else return false
         refresh(); return true
     }
 
@@ -68,10 +83,10 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
 
     private fun loadScreen() {
         when (val s = screen) {
-            Screen.Home -> { recents = store.recent(12); space = store.space(); categories = store.categories(); trash = store.trashed() }
+            Screen.Navigator -> { space = store.space(); trash = store.trashed() }
+            Screen.Recent -> recents = store.recent(RECENT_MAX, RecentRules.since(now()))
             is Screen.Browse -> items = store.list(s.path, sort)
-            is Screen.CategoryList -> items = if (s.category == Category.DOWNLOADS) store.search("", under = "Download", limit = 500)
-                else store.search("", s.category, limit = 500)
+            is Screen.CategoryList -> items = store.search("", s.category, limit = 500)
             Screen.Starred -> items = FileRules.sorted(starred.mapNotNull { runCatching { store.info(it) }.getOrNull() }, sort)
             Screen.Trash, Screen.Settings -> trash = store.trashed()
             Screen.Search -> Unit
@@ -83,6 +98,16 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
         val found = store.search(query, category, limit = 500).filter { it.modified >= sinceMs }
         items = if (newestFirst) found else found.reversed()
     }
+
+    fun toggleGroup(group: RecentGroup) { expanded = if (group in expanded) expanded - group else expanded + group }
+    fun filterRecent(category: Category?) { recentFilter = category }
+
+    /** «Buscar historial»: a search the user went through with (pressed search or opened a result). */
+    fun rememberSearch(query: String) {
+        val next = FileRules.addToHistory(history, query)
+        if (next != history) { history = next; prefs?.history = next }
+    }
+    fun clearHistory() { history = emptyList(); prefs?.history = emptyList() }
 
     fun toggleGrid() { grid = !grid; prefs?.grid = grid }
     fun sortBy(next: Sort) { sort = next; prefs?.sort = next; refresh() }
@@ -129,4 +154,6 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
             if (error != null) message = error.message ?: error.toString()
         }
     }
+
+    companion object { const val RECENT_MAX = 2000 }
 }

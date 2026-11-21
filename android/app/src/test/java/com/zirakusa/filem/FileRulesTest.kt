@@ -55,4 +55,22 @@ class FileRulesTest {
         assertEquals("641 kB", FileRules.size(641_000))
         assertEquals("1 MB", FileRules.size(1_000_000))
     }
+
+    @Test fun zipsAndPlaces() {
+        listOf("fotos.zip", "a.RAR", "b.7z", "c.tar", "d.tar.gz").forEach { assertEquals(it, Category.ZIPS, FileRules.category(it)) }
+        assertTrue(Category.RECEIVED.isPlace && Category.DOWNLOADS.isPlace && !Category.ZIPS.isPlace)
+        assertTrue("Download" in Category.RECEIVED.folders && "Bluetooth" in Category.RECEIVED.folders)
+        assertEquals(Category.ZIPS, Category.from("zips")); assertEquals(Category.RECEIVED, Category.from("received"))
+        assertEquals(listOf("Download", "Bluetooth"), FileRules.outermost(listOf("Download", "Download/Telegram", "Bluetooth", "Download")))
+        assertEquals(listOf("Telegram", "Pictures/Telegram"), FileRules.outermost(listOf("Telegram", "Pictures/Telegram")))
+    }
+
+    @Test fun searchHistoryKeepsTheNewestTen() {
+        var h = emptyList<String>()
+        h = FileRules.addToHistory(h, " informe "); h = FileRules.addToHistory(h, "fotos"); h = FileRules.addToHistory(h, "INFORME")
+        assertEquals(listOf("INFORME", "fotos"), h)
+        assertEquals(h, FileRules.addToHistory(h, "   "))
+        (1..15).forEach { h = FileRules.addToHistory(h, "q$it") }
+        assertEquals(10, h.size); assertEquals("q15", h.first()); assertEquals("q6", h.last())
+    }
 }

@@ -8,6 +8,12 @@ object FileRules {
     const val NAME_MAX = 255
     /** Filem's own hidden folder on the storage (the trash lives here); never listed, never reachable by MCP. */
     const val APP_DIR = ".filem"
+    const val HISTORY_MAX = 10
+
+    /** Where the phone keeps what it receives (WhatsApp, Bluetooth, Telegram…), besides Download. */
+    val RECEIVED_FOLDERS = listOf("Download", "Android/media/com.whatsapp/WhatsApp/Media",
+        "Android/media/com.whatsapp.w4b/WhatsApp Business/Media", "WhatsApp/Media", "Bluetooth", "Download/Bluetooth",
+        "Telegram", "Download/Telegram", "Pictures/Telegram", "Movies/Telegram", "Documents/Telegram")
 
     /** Why a new name is refused, or null when it is fine. */
     fun nameProblem(name: String): String? = when {
@@ -96,4 +102,16 @@ object FileRules {
 
     /** True when [child] is the same as, or inside, [folder] (both relative): a folder cannot go into itself. */
     fun isInside(child: String, folder: String) = child == folder || child.startsWith("$folder/")
+
+    /** The folders that are not inside another one of the list (so nothing is walked twice), in their order. */
+    fun outermost(folders: List<String>): List<String> = folders.distinct().filter { f ->
+        folders.none { other -> other != f && isInside(f, other) }
+    }
+
+    /** «Buscar historial»: [query] goes first (once, whatever its case), at most [max] kept. Blank queries are ignored. */
+    fun addToHistory(history: List<String>, query: String, max: Int = HISTORY_MAX): List<String> {
+        val q = query.trim().take(100)
+        if (q.isEmpty()) return history
+        return (listOf(q) + history.filterNot { it.equals(q, ignoreCase = true) }).take(max)
+    }
 }

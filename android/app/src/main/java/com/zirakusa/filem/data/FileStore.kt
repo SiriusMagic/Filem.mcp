@@ -44,31 +44,46 @@ class FileStore(val root: File, private val now: () -> Long = System::currentTim
         return FileRules.sorted(visibleChildren(dir).map(::item), sort)
     }
 
-    /** Files (not folders) whose name has every word of [query], newest first; walks at most [maxVisited] entries. */
-    fun search(query: String, category: Category? = null, under: String = "", limit: Int = 200, maxVisited: Int = 200_000): List<FileItem> {
-        val found = mutableListOf<FileItem>(); var visited = 0
-        walk(file(under)) { f ->
+    /**
+     * Files (not folders) whose name has every word of [query], newest first; walks at most [maxVisited] entries. A
+     * place [category] («Descargas», «Recibido») searches its folders; the others match by extension. Only files
+     * modified at [sinceMs] or later.
+     */
+    fun search(query: String, category: Category? = null, under: String = "", limit: Int = 200, sinceMs: Long = 0,
+        maxVisited: Int = 200_000): List<FileItem> {
+        val base = file(under)
+        if (!base.isDirectory) throw if (base.exists()) FileFailure("NOT_A_FOLDER", "«$under» is a file.") else notFound(under)
+        val starts = if (category?.isPlace != true) listOf(base) else {
+            val at = relative(base)
+            placeFolders(category).mapNotNull { p ->
+                when { at.isEmpty() || FileRules.isInside(p, at) -> file(p); FileRules.isInside(at, p) -> base; else -> null }
+            }.distinct()
+        }
+        val found = LinkedHashMap<String, FileItem>(); var visited = 0
+        for (start in starts) walk(start) { f ->
             visited++
             if (!f.isDirectory && (query.isBlank() || FileRules.matches(f.name, query)) &&
-                (category == null || FileRules.category(f.name) == category)) found += item(f)
+                (category == null || category.isPlace || FileRules.category(f.name) == category) &&
+                (sinceMs == 0L || f.lastModified() >= sinceMs)) item(f).let { found[it.path] = it }
             visited < maxVisited
         }
-        return found.sortedByDescending { it.modified }.take(limit)
+        return found.values.sortedByDescending { it.modified }.take(limit)
     }
 
-    /** Newest files anywhere (for «Recientes»). */
-    fun recent(limit: Int = 20) = search("", limit = limit)
+    /** Newest files anywhere (for «Reciente»), optionally only since [sinceMs]. */
+    fun recent(limit: Int = 20, sinceMs: Long = 0) = search("", limit = limit, sinceMs = sinceMs)
 
-    /** Size and count of each category, plus «Descargas» (the Download folder). */
+    /** The folders of a place category that exist and can be read, without one inside another. */
+    fun placeFolders(category: Category): List<String> =
+        FileRules.outermost(category.folders.filter { runCatching { file(it) }.getOrNull()?.let { f -> f.isDirectory && f.canRead() } == true })
+
+    /** Size and count of each category: extensions over the whole storage, places over their folders. */
     fun categories(): Map<Category, Pair<Long, Int>> {
         val totals = Category.entries.associateWith { longArrayOf(0, 0) }
-        walk(root) { f ->
-            if (!f.isDirectory) FileRules.category(f.name)?.let { totals.getValue(it)[0] += f.length(); totals.getValue(it)[1]++ }
-            true
-        }
-        val download = File(root, "Download")
-        if (download.isDirectory) walk(download) { f ->
-            if (!f.isDirectory) { totals.getValue(Category.DOWNLOADS)[0] += f.length(); totals.getValue(Category.DOWNLOADS)[1]++ }; true
+        fun add(c: Category, f: File) { totals.getValue(c)[0] += f.length(); totals.getValue(c)[1]++ }
+        walk(root) { f -> if (!f.isDirectory) FileRules.category(f.name)?.let { add(it, f) }; true }
+        Category.entries.filter { it.isPlace }.forEach { c ->
+            placeFolders(c).forEach { p -> walk(file(p)) { f -> if (!f.isDirectory) add(c, f); true } }
         }
         return totals.mapValues { it.value[0] to it.value[1].toInt() }
     }

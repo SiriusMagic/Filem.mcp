@@ -21,6 +21,16 @@ object FilemColors {
     val OnAccent = Color(0xFF0F1A14)
     val Danger = Color(0xFFF28B82)
     val Scrim = Color(0xFF242424)
+    /** «Navegador»: the round-square category icons, Xiaomi Files style, with a white glyph. */
+    val CatBlue = Color(0xFF3D8BFF)
+    val CatPurple = Color(0xFF9B6BFF)
+    val CatYellow = Color(0xFFF5B82E)
+    val CatRed = Color(0xFFFF5F57)
+    val CatGreen = Color(0xFF34C77B)
+    val CatSky = Color(0xFF2FA8F5)
+    val CatOrange = Color(0xFFFF8A34)
+    val OnCat = Color(0xFFFFFFFF)
+    val Track = Color(0xFF333333)
 }
 
 @Composable fun FilemTheme(content: @Composable () -> Unit) = MaterialTheme(
