@@ -1,0 +1,2 @@
+<!-- Android 10-11: Filem's settings and tokens stay out of backups. -->
+<full-backup-content><exclude domain="root" /><exclude domain="sharedpref" /><exclude domain="database" /><exclude domain="file" /></full-backup-content>

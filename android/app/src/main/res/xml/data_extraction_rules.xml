@@ -1,0 +1,5 @@
+<!-- Filem's settings and tokens stay out of cloud backups and device transfers. -->
+<data-extraction-rules>
+    <cloud-backup><exclude domain="root" /><exclude domain="sharedpref" /><exclude domain="database" /><exclude domain="file" /></cloud-backup>
+    <device-transfer><exclude domain="root" /><exclude domain="sharedpref" /><exclude domain="database" /><exclude domain="file" /></device-transfer>
+</data-extraction-rules>
