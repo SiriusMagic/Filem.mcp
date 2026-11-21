@@ -24,6 +24,14 @@ object Openers {
     /** The MIME type of a file: Android's answer ([system]) when it has one, then ours, then any. */
     fun mime(extension: String, system: String?): String = system?.takeIf { it.isNotBlank() } ?: known[extension.lowercase()] ?: "*/*"
 
+    // «Elegir archivo» for another app (Reloj › Añadir nuevo asks for audio): whether a file of type [mime] answers a
+    // request for [wanted]: the exact type, a whole family ("audio/" plus a star) or anything; parameters and case ignored.
+    fun matches(mime: String, wanted: String?): Boolean {
+        val w = wanted?.substringBefore(';')?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return true
+        val m = mime.substringBefore(';').trim().lowercase()
+        return w == "*/*" || w == "*" || w == m || (w.endsWith("/*") && m.startsWith(w.dropLast(1)))
+    }
+
     /** Our apps for that type, in the order they are offered. */
     fun ours(mime: String): List<String> = when {
         mime.startsWith("video/") -> listOf(STONE_VIDEO, STONE)

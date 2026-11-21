@@ -52,6 +52,16 @@
             <meta-data android:name="com.zirakusa.gatewayhub.module" android:value="files_" />
             <meta-data android:name="com.zirakusa.gatewayhub.link" android:value="${applicationId}.hublink" />
         </activity>
+        <!-- «Elegir archivo»: other apps (Reloj › Añadir nuevo) pick a file with Filem. -->
+        <activity android:name=".PickActivity" android:exported="true" android:windowSoftInputMode="adjustResize"
+            android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="android.intent.action.GET_CONTENT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.OPENABLE" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
         <provider android:name=".mcp.HubLinkProvider" android:authorities="${applicationId}.hublink"
             android:exported="true" android:permission="com.zirakusa.gatewayhub.permission.LINK" />
         <!-- «Abrir» and «Compartir» hand one file to another app with a one-time grant. -->

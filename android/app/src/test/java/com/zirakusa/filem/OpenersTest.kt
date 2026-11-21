@@ -30,4 +30,14 @@ class OpenersTest {
         assertEquals("*/*", Openers.mime("xyz", null))
         assertEquals("*/*", Openers.mime("", ""))
     }
+
+    @Test fun pickingMatchesTheTypeAsked() {
+        assertEquals(true, Openers.matches("audio/mpeg", "audio/*"))
+        assertEquals(true, Openers.matches("audio/ogg", "AUDIO/*"))
+        assertEquals(false, Openers.matches("video/mp4", "audio/*"))
+        assertEquals(true, Openers.matches("image/png", "*/*"))
+        assertEquals(true, Openers.matches("text/plain", null))
+        assertEquals(true, Openers.matches("text/plain; charset=utf-8", "text/plain"))
+        assertEquals(false, Openers.matches("audiobook/x", "audio/*"))
+    }
 }

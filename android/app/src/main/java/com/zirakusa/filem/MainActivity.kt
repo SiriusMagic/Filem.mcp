@@ -39,7 +39,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /** Asks for «Acceso a todos los archivos», then shows Filem; opens and shares files with other apps; starts Modo MCP. */
-class MainActivity : ComponentActivity(), Actions {
+open class MainActivity : ComponentActivity(), Actions {
+    /** «Elegir archivo» for another app (see [PickActivity]): the type asked for, or null when Filem is just open. */
+    protected open val pickType: String? = null
     private var granted by mutableStateOf(false)
     private lateinit var state: FilesState
     /** An APK tapped while Filem could not install apps yet: it opens when the user comes back from the setting. */
@@ -59,6 +61,7 @@ class MainActivity : ComponentActivity(), Actions {
         state = FilesState(store, Prefs(this), lifecycleScope)
         McpMode.onChanged = { state.refresh() }
         McpMode.load(this)
+        pickType?.let { state.message = getString(R.string.pick_hint) }
         lifecycleScope.launch(Dispatchers.IO) { runCatching { store.emptyTrash(olderThanDays = 30) } }
         setContent {
             FilemTheme {
@@ -117,10 +120,21 @@ class MainActivity : ComponentActivity(), Actions {
 
     /** «Abrir con…»: our apps for that type first (Stone Video, Stone, Luma, Notas), then the rest; APKs install. */
     override fun open(item: FileItem) {
+        pickType?.let { wanted -> deliver(item, wanted); return }
         if (item.extension == "apk") { install(item); return }
         val type = mime(item.name)
         val apps = runCatching { openers(view(item, type), type) }.getOrDefault(emptyList())
         if (apps.isEmpty()) chooser(item, type) else opening = Triple(item, type, apps)
+    }
+
+    /** «Elegir archivo»: hands the tapped file back to the app that asked (read once), if it is of the type it wants. */
+    private fun deliver(item: FileItem, wanted: String) {
+        val type = mime(item.name)
+        if (!Openers.matches(type, wanted)) { Toast.makeText(this, R.string.pick_wrong_type, Toast.LENGTH_SHORT).show(); return }
+        val uri = uri(item.path)
+        setResult(RESULT_OK, Intent().setDataAndType(uri, type).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            .apply { clipData = ClipData.newRawUri(item.name, uri) })
+        finish()
     }
 
     /** Tapping an APK installs it with the phone's installer; the first time Android asks to allow Filem. */
@@ -158,4 +172,12 @@ class MainActivity : ComponentActivity(), Actions {
         val open = packageManager.getLaunchIntentForPackage("com.zirakusa.gatewayhub")
         if (open != null) startActivity(open) else Toast.makeText(this, R.string.mcp_paste_in_hub, Toast.LENGTH_LONG).show()
     }
+}
+
+/**
+ * «Elegir archivo» (ACTION_GET_CONTENT): Reloj's «Añadir nuevo», or any app, opens Filem to pick one file. Same
+ * screens; tapping a file of the type asked returns it and closes. A separate activity, so the answer reaches the app.
+ */
+class PickActivity : MainActivity() {
+    override val pickType: String get() = intent?.type ?: "*/*"
 }

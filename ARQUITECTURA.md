@@ -9,7 +9,7 @@ Carpeta = package (`android/app/src/main/java/com/zirakusa/filem/`):
 | `ui/screens/` | `NavigatorScreen` (Archivos locales, 8 categorías, Ubicación y ⋮), `RecentScreen` (grupos Hoy/Ayer/7/30 días), `Tabs` (barra inferior, botón redondo y título grande), `ApkIcon` (icono, nombre y versión de los APK, en segundo plano y en caché), `OpenWithDialog` («Abrir con…»), `BrowserScreen` (carpeta: lista o cuadrícula, ⋮ Seleccionar todo / Ordenar por / Agregar carpeta nueva, ruta verde, botón de carpeta nueva, barra de selección), `Listing` (filas, mosaicos y el ⋮ de cada archivo), `SearchScreen` (filtros de tipo, fecha y orden, historial y campo abajo), `TrashScreen`, `SettingsScreen`, `McpScreen`, `PermissionScreen`, `Dialogs` y `Chrome`. Solo pintan y avisan. |
 | `ui/theme/` | `FilemColors` y `FilemTheme` (oscuro, verde suave). |
 | `mcp/` | Modo MCP, como Notas: `Tokens`, `SecretBox`, `FileTools` (herramientas `files_*`), `McpHandler`, `RelayLink` (relay de Stone), `McpMode` y `HubLink`. |
-| `MainActivity.kt` | Pide «Acceso a todos los archivos», abre («Abrir con…» con nuestras apps primero), instala APKs (pide «Instalar apps desconocidas» si hace falta) y comparte con `FileProvider`, arranca el Modo MCP y vacía lo de la papelera con más de 30 días. |
+| `MainActivity.kt` | `PickActivity` («Elegir archivo» para otras apps: la misma app, y tocar un archivo del tipo pedido lo devuelve con `Openers.matches`). Pide «Acceso a todos los archivos», abre («Abrir con…» con nuestras apps primero), instala APKs (pide «Instalar apps desconocidas» si hace falta) y comparte con `FileProvider`, arranca el Modo MCP y vacía lo de la papelera con más de 30 días. |
 
 Reglas:
 - Texto visible en `res/values/strings.xml` (español) y `values-en`.

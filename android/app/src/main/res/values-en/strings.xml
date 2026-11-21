@@ -130,4 +130,6 @@
     <plurals name="selected"><item quantity="one">%1$d selected</item><item quantity="other">%1$d selected</item></plurals>
     <plurals name="trash_title"><item quantity="one">Move %1$d item to trash?</item><item quantity="other">Move %1$d items to trash?</item></plurals>
     <plurals name="recent_footer"><item quantity="one">%1$d item · Only files added in the last 30 days are shown</item><item quantity="other">%1$d items · Only files added in the last 30 days are shown</item></plurals>
+    <string name="pick_hint">Tap the file you want to use.</string>
+    <string name="pick_wrong_type">That file is not of the type the app asks for.</string>
 </resources>

@@ -1,5 +1,11 @@
 # Cambios de Filem
 
+## 0.3.0 (versionCode 3)
+- «Elegir archivo»: otras apps pueden abrir Filem para escoger un archivo (`ACTION_GET_CONTENT`). Lo usa Reloj en
+  «Sonido de la alarma › Añadir nuevo»: Filem se abre con «Toca el archivo que quieres usar», y al tocar un archivo del
+  tipo pedido (por ejemplo, audio) se lo entrega a esa app con permiso de lectura de una vez y se cierra. Si el archivo
+  no es del tipo pedido, avisa. Atrás cancela.
+
 ## 0.2.0 (versionCode 2)
 - Nuevo diseño al estilo de Archivos de Xiaomi (oscuro, tarjetas redondeadas). Barra inferior con «Reciente» y
   «Navegador» y un botón redondo de búsqueda aparte. La app abre en «Navegador».
