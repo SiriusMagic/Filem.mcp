@@ -1,5 +1,10 @@
 # Cambios de Filem
 
+## 0.4.0 (versionCode 4)
+- **Resumen para Inicio**: la tarjeta «Documentos» de la pantalla «Hoy» de Inicio muestra los documentos más nuevos de
+  los últimos 30 días (nombre y tamaño, hasta 5). Nunca la papelera. Si Filem no tiene acceso a los archivos, lo dice.
+  Solo apps firmadas por el mismo desarrollador pueden leerlo (`SummaryProvider`); solo salen nombres y tamaños.
+
 ## 0.3.0 (versionCode 3)
 - «Elegir archivo»: otras apps pueden abrir Filem para escoger un archivo (`ACTION_GET_CONTENT`). Lo usa Reloj en
   «Sonido de la alarma › Añadir nuevo»: Filem se abre con «Toca el archivo que quieres usar», y al tocar un archivo del

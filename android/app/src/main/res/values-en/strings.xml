@@ -132,4 +132,8 @@
     <plurals name="recent_footer"><item quantity="one">%1$d item · Only files added in the last 30 days are shown</item><item quantity="other">%1$d items · Only files added in the last 30 days are shown</item></plurals>
     <string name="pick_hint">Tap the file you want to use.</string>
     <string name="pick_wrong_type">That file is not of the type the app asks for.</string>
+    <string name="summary_title">Documents</string>
+    <string name="summary_empty">No recent documents</string>
+    <string name="summary_no_access">Open Filem and allow access to files</string>
+    <string name="summary_permission">Summary for Inicio</string>
 </resources>

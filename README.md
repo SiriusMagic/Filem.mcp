@@ -11,6 +11,7 @@ Administrador de archivos para Android con servidor MCP, de la familia de Stone,
 - **Buscar:** por nombre, sin importar acentos, con filtros de tipo, fecha y orden, campo abajo e historial.
 - **Abrir:** «Abrir con…» ofrece primero nuestras apps según el tipo (Stone Video, Stone, Luma, Notas); los APK muestran
   su icono y se instalan al tocarlos.
+- **Resumen para Inicio:** tus documentos recientes en la tarjeta «Documentos» de «Hoy».
 - **Elegir archivo:** otras apps (Reloj › Añadir nuevo) abren Filem para escoger un archivo, que se les entrega al tocarlo.
 - **Modo MCP:** Claude, ChatGPT o Gateway Hub pueden listar, buscar, leer textos pequeños y (con permiso de escritura)
   crear carpetas, renombrar, copiar, mover y mandar a la papelera. Herramientas `files_*`.

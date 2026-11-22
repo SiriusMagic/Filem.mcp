@@ -132,4 +132,8 @@
     <plurals name="recent_footer"><item quantity="one">%1$d elemento · Se muestran solo los archivos añadidos en los últimos 30 días</item><item quantity="many">%1$d elementos · Se muestran solo los archivos añadidos en los últimos 30 días</item><item quantity="other">%1$d elementos · Se muestran solo los archivos añadidos en los últimos 30 días</item></plurals>
     <string name="pick_hint">Toca el archivo que quieres usar.</string>
     <string name="pick_wrong_type">Ese archivo no es del tipo que pide la app.</string>
+    <string name="summary_title">Documentos</string>
+    <string name="summary_empty">No hay documentos recientes</string>
+    <string name="summary_no_access">Abre Filem y permite el acceso a los archivos</string>
+    <string name="summary_permission">Resumen para Inicio</string>
 </resources>
