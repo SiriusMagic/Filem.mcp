@@ -6,6 +6,7 @@ Administrador de archivos para Android con servidor MCP, de la familia de Stone,
   Recibido, Descargas) y Ubicación (Mi teléfono, Recientemente eliminado, Favoritos). Barra inferior con «Reciente»,
   «Navegador» y el botón de búsqueda.
 - **Reciente:** archivos de los últimos 30 días agrupados en Hoy, Ayer, Últimos 7 días y Últimos 30 días, con filtro.
+  Se actualiza solo cuando llega un archivo nuevo (una descarga, una foto), sin cerrar la app y sin gastar batería en segundo plano.
 - **Carpetas:** lista o cuadrícula, ordenar por nombre/fecha/tamaño/tipo, carpeta nueva, cambiar nombre, copiar y mover
   («Pegar aquí»), compartir, favoritos, información y papelera (30 días).
 - **Buscar:** por nombre, sin importar acentos, con filtros de tipo, fecha y orden, campo abajo e historial.
