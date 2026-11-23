@@ -1,3 +1,10 @@
+# Sin publicar
+
+- **Reciente y las carpetas se actualizan solos**: una descarga nueva aparece sin cerrar Filem. Android avisa cuando cambian
+  los archivos (MediaStore); en segundo plano Filem solo lo anota y lee al volver, solo si algo cambió; abierta, lee como
+  mucho una vez cada 2 s (una descarga escribe muchas veces), sin barra de carga y sin perder la selección (`Freshness`).
+- 38 pruebas.
+
 # Cambios de Filem
 
 ## 0.4.0 (versionCode 4)

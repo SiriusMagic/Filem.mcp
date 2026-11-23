@@ -6,26 +6,33 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.core.net.toUri
+import android.database.ContentObserver
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.provider.MediaStore
 import android.provider.Settings
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.zirakusa.filem.data.FileItem
+import com.zirakusa.filem.data.FileStore
+import com.zirakusa.filem.data.Freshness
 import com.zirakusa.filem.data.Opener
 import com.zirakusa.filem.data.Openers
-import com.zirakusa.filem.data.FileStore
 import com.zirakusa.filem.data.Prefs
 import com.zirakusa.filem.mcp.McpMode
 import com.zirakusa.filem.ui.Actions
@@ -34,9 +41,11 @@ import com.zirakusa.filem.ui.FilesState
 import com.zirakusa.filem.ui.screens.OpenWithDialog
 import com.zirakusa.filem.ui.screens.PermissionScreen
 import com.zirakusa.filem.ui.theme.FilemTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Asks for «Acceso a todos los archivos», then shows Filem; opens and shares files with other apps; starts Modo MCP. */
 open class MainActivity : ComponentActivity(), Actions {
@@ -60,6 +69,8 @@ open class MainActivity : ComponentActivity(), Actions {
         val store = FileStore(root)
         state = FilesState(store, Prefs(this), lifecycleScope)
         McpMode.onChanged = { state.refresh() }
+        // Listens for the whole life of the screen, but only reads files when it is visible (see schedule).
+        contentResolver.registerContentObserver(MediaStore.Files.getContentUri("external"), true, watcher)
         McpMode.load(this)
         pickType?.let { state.message = getString(R.string.pick_hint) }
         lifecycleScope.launch(Dispatchers.IO) { runCatching { store.emptyTrash(olderThanDays = 30) } }
@@ -75,6 +86,28 @@ open class MainActivity : ComponentActivity(), Actions {
             }
         }
     }
+
+    private val freshness = Freshness()
+    private var waiting: Job? = null
+    /** Android's note that files changed (MediaStore): free while nothing is written. */
+    private val watcher = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) { freshness.changed(); schedule() }
+    }
+
+    /** Reads again when something changed and Filem is on screen; one read for many changes in a row. */
+    private fun schedule() {
+        if (!granted || waiting?.isActive == true) return
+        val wait = freshness.next(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED), SystemClock.elapsedRealtime()) ?: return
+        waiting = lifecycleScope.launch {
+            delay(wait)
+            freshness.refreshed(SystemClock.elapsedRealtime())
+            state.refreshQuietly()
+        }
+    }
+
+    override fun onStart() { super.onStart(); schedule() }
+
+    override fun onDestroy() { contentResolver.unregisterContentObserver(watcher); super.onDestroy() }
 
     override fun onResume() {
         super.onResume()

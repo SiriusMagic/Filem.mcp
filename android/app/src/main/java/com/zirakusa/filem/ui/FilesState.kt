@@ -81,6 +81,9 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
 
     fun refresh() = run(reload = false) { loadScreen() }
 
+    /** The same, without the loading bar and keeping the selection: after Android said files changed. */
+    fun refreshQuietly() = run(reload = false, quiet = true) { loadScreen() }
+
     private fun loadScreen() {
         when (val s = screen) {
             Screen.Navigator -> { space = store.space(); trash = store.trashed() }
@@ -141,15 +144,15 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
      * Runs [block] off the main thread. A change ([reload]) then reloads the screen and clears the selection, even when
      * it failed half way (some files may have moved). A failure becomes [message].
      */
-    private fun run(reload: Boolean, block: () -> Unit) {
-        loading = true
+    private fun run(reload: Boolean, quiet: Boolean = false, block: () -> Unit) {
+        if (!quiet) loading = true
         scope.launch {
             val error = withContext(io) {
                 val failure = runCatching(block).exceptionOrNull()
                 if (reload) runCatching { loadScreen() }
                 failure
             }
-            loading = false
+            if (!quiet) loading = false
             if (reload) selection = emptySet()
             if (error != null) message = error.message ?: error.toString()
         }

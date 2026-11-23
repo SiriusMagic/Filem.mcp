@@ -105,4 +105,27 @@ class FilesStateTest {
         state.clearHistory()
         assertTrue(state.history.isEmpty())
     }
+
+    @Test fun newDownloadsShowUpWithoutReopening() {
+        state.tab(Screen.Recent)
+        assertEquals(listOf("a.pdf"), state.recents.map { it.name })
+        state.toggle(state.recents.first())
+        File(root, "Download/nuevo.pdf").writeText("descargado ahora")           // a browser finished a download
+        state.refreshQuietly()
+        assertEquals(listOf("a.pdf", "nuevo.pdf"), state.recents.map { it.name }.sorted())
+        assertFalse(state.loading); assertEquals(1, state.selection.size)       // no loading bar, the selection stays
+    }
+
+    @Test fun freshnessReadsOnlyWhenVisibleAndNotTooOften() {
+        val f = com.zirakusa.filem.data.Freshness(gap = 2_000)
+        assertNull(f.next(visible = true, now = 0))                              // nothing changed: nothing to do
+        f.changed()
+        assertNull(f.next(visible = false, now = 10))                            // in the background: only remembered
+        assertEquals(0L, f.next(visible = true, now = 10))                       // back on screen: read at once
+        f.refreshed(10)
+        assertNull(f.next(visible = true, now = 500))
+        f.changed(); f.changed(); f.changed()                                    // a download writes many times
+        assertEquals(1_510L, f.next(visible = true, now = 500))                  // one read, 2 s after the last
+        assertTrue(f.dirty); f.refreshed(2_010); assertFalse(f.dirty)
+    }
 }
