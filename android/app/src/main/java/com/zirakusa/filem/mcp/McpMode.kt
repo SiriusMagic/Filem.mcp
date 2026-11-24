@@ -83,7 +83,7 @@ object McpMode {
      * and rules as through the relay. Only while «Redireccionar a Hub» is on. [body] is a JSON-RPC request, so is the answer.
      */
     fun local(body: String): String? {
-        val d = data ?: return null
+        val d = store ?: return null
         if (!hubRedirect) return null
         val token = redirectToken()
         return kotlinx.coroutines.runBlocking {
