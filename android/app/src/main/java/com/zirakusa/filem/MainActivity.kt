@@ -65,6 +65,7 @@ open class MainActivity : ComponentActivity(), Actions {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppIcon.load(this)
         enableEdgeToEdge()
         val store = FileStore(root)
         state = FilesState(store, Prefs(this), lifecycleScope)
