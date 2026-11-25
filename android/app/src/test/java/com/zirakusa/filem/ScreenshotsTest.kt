@@ -24,7 +24,12 @@ import com.zirakusa.filem.ui.Actions
 import com.zirakusa.filem.ui.FilemApp
 import com.zirakusa.filem.ui.FilesState
 import com.zirakusa.filem.ui.screens.PermissionScreen
+import com.zirakusa.filem.ui.theme.FilemColors
 import com.zirakusa.filem.ui.theme.FilemTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertEquals
@@ -71,6 +76,16 @@ class ScreenshotsTest {
 
     private fun state() = FilesState(FileStore(storage()), null, CoroutineScope(Dispatchers.Unconfined), Dispatchers.Unconfined)
         .also { it.refresh() }
+
+    /** Ajustes › Icono de la app: the five folders, «Plano» chosen (the default). */
+    @Test fun appIcons() {
+        compose.setContent { FilemTheme { Box(Modifier.padding(16.dp)) {
+            IconCard(FilemColors.Card, FilemColors.Text, FilemColors.Muted, FilemColors.Accent)
+        } } }
+        compose.onNodeWithText("Plano").assertExists()
+        compose.onNodeWithText("Suave").assertExists()
+        compose.onRoot().captureRoboImage("build/screenshots/filem-icons.png")
+    }
 
     @Test fun navigatorFolderGridAndSelection() {
         val state = state()

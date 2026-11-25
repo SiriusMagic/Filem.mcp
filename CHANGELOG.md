@@ -1,3 +1,9 @@
+# Filem 0.6.0
+
+- **Iconos nuevos**: la carpeta en cinco estilos, **Plano** (el de fábrica), Cristal, Papel, Brillante y Suave, en
+  Ajustes › Icono de la app. Se quitan los anteriores (Original, Claro, Dorado, Azul y Verde); si tenías uno elegido, pasa
+  solo al nuevo que ocupa su lugar.
+
 # Filem 0.5.1
 
 - **Conectar todas** (Gateway Hub 0.0.21): con un toque en el Hub se activa aquí «Redireccionar a Hub» y la app queda

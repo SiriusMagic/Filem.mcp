@@ -39,7 +39,7 @@ import com.zirakusa.filem.ui.theme.FilemColors
             Text(stringResource(R.string.mcp_settings_hint), color = FilemColors.Muted)
             Text(stringResource(if (McpMode.active) R.string.mcp_status_on else R.string.mcp_status_off), color = FilemColors.Accent)
         }
-        IconCard(FilemColors.Card, FilemColors.Text, FilemColors.Muted, FilemColors.Accent, androidx.compose.ui.graphics.Color(0xFF0F1A14))
+        IconCard(FilemColors.Card, FilemColors.Text, FilemColors.Muted, FilemColors.Accent)
         Text(stringResource(R.string.version, BuildConfig.VERSION_NAME), Modifier.padding(24.dp), color = FilemColors.Muted)
     }
 }

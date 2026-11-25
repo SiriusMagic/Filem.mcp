@@ -137,10 +137,10 @@
     <string name="summary_no_access">Abre Filem y permite el acceso a los archivos</string>
     <string name="summary_permission">Resumen para Inicio</string>
     <string name="icon_title">Icono de la app</string>
-    <string name="icon_original">Original</string>
-    <string name="icon_light">Claro</string>
-    <string name="icon_gold">Dorado</string>
-    <string name="icon_blue">Azul</string>
-    <string name="icon_green">Verde</string>
+    <string name="icon_flat">Plano</string>
+    <string name="icon_glass">Cristal</string>
+    <string name="icon_paper">Papel</string>
+    <string name="icon_glossy">Brillante</string>
+    <string name="icon_soft">Suave</string>
     <string name="icon_hint">Cambia el icono de la pantalla de inicio. Algunos lanzadores tardan unos segundos en mostrarlo.</string>
 </resources>

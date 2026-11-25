@@ -1,8 +1,8 @@
 <resources>
-    <color name="launcher_background">#0F1A14</color>
-    <!-- The other launcher icons (Ajustes › Icono de la app). -->
-    <color name="launcher_background_light">#F2F2F2</color>
-    <color name="launcher_background_gold">#F5C518</color>
-    <color name="launcher_background_blue">#1565C0</color>
-    <color name="launcher_background_green">#1B5E20</color>
+    <!-- Launcher icon backgrounds (Ajustes › Icono de la app). Plano is the default. -->
+    <color name="launcher_background_flat">#E8EEFF</color>
+    <color name="launcher_background_glass">#0B1226</color>
+    <color name="launcher_background_paper">#FFF3DC</color>
+    <color name="launcher_background_glossy">#17306B</color>
+    <color name="launcher_background_soft">#FFE6D6</color>
 </resources>
