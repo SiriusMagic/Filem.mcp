@@ -17,12 +17,13 @@ import androidx.compose.ui.unit.sp
 import com.zirakusa.filem.BuildConfig
 import com.zirakusa.filem.R
 import com.zirakusa.filem.mcp.McpMode
+import com.zirakusa.filem.mcp.RelayLink
 import com.zirakusa.filem.ui.FilesState
 import com.zirakusa.filem.ui.Screen
 import com.zirakusa.filem.ui.theme.FilemColors
 
 /** «Configuración»: hidden files and Modo MCP. */
-@Composable fun SettingsScreen(state: FilesState) {
+@Composable fun SettingsScreen(state: FilesState, openArka: () -> Unit) {
     Column(Modifier.fillMaxSize().background(FilemColors.Background)) {
         TopBar(stringResource(R.string.settings), { state.back() }, stringResource(R.string.back))
         Card {
@@ -34,10 +35,15 @@ import com.zirakusa.filem.ui.theme.FilemColors
                 Switch(state.showHidden, state::setHidden)
             }
         }
-        Card(Modifier.clickable { state.go(Screen.Mcp) }) {
+        Card(Modifier.clickable(onClick = openArka)) {
             Text(stringResource(R.string.mcp_title), fontSize = 18.sp, color = FilemColors.Text)
             Text(stringResource(R.string.mcp_settings_hint), color = FilemColors.Muted)
-            Text(stringResource(if (McpMode.active) R.string.mcp_status_on else R.string.mcp_status_off), color = FilemColors.Accent)
+            Text(stringResource(when {
+                !McpMode.remote -> R.string.mcp_status_off
+                McpMode.state == RelayLink.State.ONLINE -> R.string.mcp_online
+                McpMode.state == RelayLink.State.CONNECTING -> R.string.mcp_connecting
+                else -> R.string.mcp_offline
+            }), color = FilemColors.Accent)
         }
         IconCard(FilemColors.Card, FilemColors.Text, FilemColors.Muted, FilemColors.Accent)
         Text(stringResource(R.string.version, BuildConfig.VERSION_NAME), Modifier.padding(24.dp), color = FilemColors.Muted)

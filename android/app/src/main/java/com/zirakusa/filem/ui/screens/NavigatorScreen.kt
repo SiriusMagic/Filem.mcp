@@ -101,13 +101,13 @@ private val tiles = listOf(Category.IMAGES to FilemColors.CatBlue, Category.VIDE
     }
 }
 
-/** ⋮ of «Navegador»: Configuración, Papelera and Modo MCP. */
+/** ⋮ of «Navegador»: Configuración and Papelera (the Modo MCP is in Configuración). */
 @Composable private fun MainMenu(state: FilesState) {
     var open by remember { mutableStateOf(false) }
     Box {
         RoundButton(Icons.Outlined.MoreVert, stringResource(R.string.more_options)) { open = true }
         DropdownMenu(open, { open = false }, containerColor = FilemColors.Scrim) {
-            listOf(R.string.settings to Screen.Settings, R.string.trash to Screen.Trash, R.string.mcp_title to Screen.Mcp).forEach { (label, to) ->
+            listOf(R.string.settings to Screen.Settings, R.string.trash to Screen.Trash).forEach { (label, to) ->
                 DropdownMenuItem({ Text(stringResource(label)) }, { open = false; state.go(to) })
             }
         }

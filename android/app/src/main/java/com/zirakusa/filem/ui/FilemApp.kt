@@ -28,8 +28,7 @@ import com.zirakusa.filem.ui.theme.FilemColors
                     Screen.Starred -> BrowserScreen(state, actions, stringResource(R.string.favorites))
                     Screen.Search -> SearchScreen(state, actions)
                     Screen.Trash -> TrashScreen(state)
-                    Screen.Settings -> SettingsScreen(state)
-                    Screen.Mcp -> McpScreen(actions::copyLink, actions::goToHub) { state.back() }
+                    Screen.Settings -> SettingsScreen(state, actions::openArka)
                 }
             }
             val s = state.screen

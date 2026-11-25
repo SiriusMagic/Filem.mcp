@@ -16,17 +16,16 @@ data class Reply(val status: Int, val body: String, val contentType: String = "a
  * token; bodies over 1 MiB are refused.
  */
 class McpHandler(private val tokens: () -> List<Token>, private val store: () -> FileStore, private val version: String,
-    private val onUsed: (Token) -> Unit = {}, private val onChanged: () -> Unit = {}, private val now: () -> Long = System::currentTimeMillis) {
+    private val onChanged: () -> Unit = {}, private val now: () -> Long = System::currentTimeMillis) {
     private val window = HashMap<String, Pair<Long, Int>>()
 
     suspend fun handle(method: String, path: String, headers: Map<String, String>, query: Map<String, String>, body: String): Reply {
         if (method == "OPTIONS") return Reply(204, "")
         if (path.trimEnd('/') !in setOf("/mcp", "")) return error(404, "Not found: use /mcp.")
-        val token = grant(headers, query) ?: return error(401, "Filem: wrong, paused, expired or missing token. Create one in Filem › Configuración › Modo MCP.")
-        if (limited(token.id)) return error(429, "Filem: too many requests. Wait a minute.")
+        val token = grant(headers, query) ?: return error(401, "Filem: wrong or missing token. The Modo MCP is turned on from Arka.")
+        if (limited(token.secret)) return error(429, "Filem: too many requests. Wait a minute.")
         if (method != "POST") return error(405, "Use POST with JSON-RPC (MCP Streamable HTTP).")
         if (body.length > MAX_BODY) return error(413, "Request too large.")
-        onUsed(token)
         return try {
             val text = body.trim()
             if (text.startsWith("[")) {
@@ -52,8 +51,7 @@ class McpHandler(private val tokens: () -> List<Token>, private val store: () ->
                     "newest files, files_read_text reads a small text file. Errors carry a code (structuredContent.error.code). " +
                     if (token.access == Access.READ) "This token is read-only." else "files_create_folder, files_rename, files_copy, " +
                         "files_move and files_trash (to Filem's trash, restorable for 30 days) change them; nothing is deleted for good.")
-                .put("_meta", JSONObject().put(TOKEN_META, JSONObject().put("name", token.name).put("kind", token.kind.key)
-                    .put("usage", token.usage).put("mode", token.access.key).put("expiresAt", token.expiresAt)))
+                .put("_meta", JSONObject().put(TOKEN_META, JSONObject().put("name", token.name).put("kind", "redirect").put("mode", token.access.key)))
             "ping" -> JSONObject()
             "tools/list" -> JSONObject().put("tools", JSONArray(FileTools.available(token.access).map {
                 JSONObject().put("name", it.name).put("description", it.description).put("inputSchema", it.schema)
@@ -82,8 +80,7 @@ class McpHandler(private val tokens: () -> List<Token>, private val store: () ->
         val lower = headers.mapKeys { it.key.lowercase() }
         val given = (lower["authorization"]?.takeIf { it.startsWith("Bearer ", true) }?.substring(7)?.trim()
             ?: lower["x-api-key"]?.trim() ?: query["token"]?.trim())?.takeIf { it.isNotEmpty() }?.toByteArray() ?: return null
-        val at = now()
-        return tokens().firstOrNull { MessageDigest.isEqual(given, it.secret.toByteArray()) }?.takeIf { it.usable(at) }
+        return tokens().firstOrNull { it.secret.isNotEmpty() && MessageDigest.isEqual(given, it.secret.toByteArray()) }
     }
 
     @Synchronized private fun limited(id: String): Boolean {

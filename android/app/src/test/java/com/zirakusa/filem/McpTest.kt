@@ -3,7 +3,6 @@ package com.zirakusa.filem
 import com.zirakusa.filem.data.FileStore
 import com.zirakusa.filem.mcp.Access
 import com.zirakusa.filem.mcp.HubLink
-import com.zirakusa.filem.mcp.Kind
 import com.zirakusa.filem.mcp.McpHandler
 import com.zirakusa.filem.mcp.Token
 import kotlinx.coroutines.runBlocking
@@ -26,11 +25,10 @@ class McpTest {
     private val root by lazy { tmp.newFolder("storage").also {
         File(it, "Download").mkdirs(); File(it, "Download/informe.txt").writeText("Hola Filem"); File(it, "DCIM").mkdirs()
     } }
-    private val reader = Token("r", "Claude", "fil_" + "r".repeat(40), Access.READ, Kind.HUB, "Leer")
-    private val writer = Token("w", "ChatGPT", "fil_" + "w".repeat(40), Access.WRITE)
-    private val paused = Token("p", "Viejo", "fil_" + "p".repeat(40), Access.WRITE, paused = true)
+    private val reader = Token("fil_" + "r".repeat(40), Access.READ)
+    private val writer = Token("fil_" + "w".repeat(40), Access.WRITE)
     private var changes = 0
-    private val handler by lazy { McpHandler({ listOf(reader, writer, paused) }, { FileStore(root) }, "0.1.0", onChanged = { changes++ }) }
+    private val handler by lazy { McpHandler({ listOf(reader, writer) }, { FileStore(root) }, "0.1.0", onChanged = { changes++ }) }
 
     private fun raw(token: Token, method: String, params: JSONObject = JSONObject()) = runBlocking {
         handler.handle("POST", "/mcp", mapOf("Authorization" to "Bearer ${token.secret}"), emptyMap(),
@@ -87,32 +85,42 @@ class McpTest {
     @Test fun readOnlyPausedAndWrongTokens() {
         assertEquals("READ_ONLY", code(reader, "files_trash", JSONObject().put("path", "DCIM")))
         assertTrue(File(root, "DCIM").exists())
-        assertEquals(401, raw(paused, "tools/list").status)
+        assertEquals(401, raw(Token("wrong_" + "x".repeat(40)), "tools/list").status)
         assertEquals(401, runBlocking { handler.handle("POST", "/mcp", emptyMap(), emptyMap(), "{}") }.status)
     }
 
     @Test fun hubLinkNeedsTheSameDeveloper() {
         assertEquals("NOT_SAME_DEVELOPER", HubLink.answer(false).getString("error"))
         assertEquals("REDIRECT_OFF", HubLink.answer(true).getString("error"))
-        // «Conectar todas» and Lucía's tools: only for the same developer, and tools only with «Redireccionar a Hub» on.
         assertEquals("NOT_SAME_DEVELOPER", HubLink.connect(false).getString("error"))
         assertEquals("NOT_SAME_DEVELOPER", HubLink.tool(false, "{}").getString("error"))
-        assertEquals("REDIRECT_OFF", HubLink.tool(true, "{}").getString("error"))
+        // Only the same developer (Arka) may connect, disconnect, read the status or run a tool.
+        listOf(HubLink.disconnect(false), HubLink.status(false)).forEach { assertEquals("NOT_SAME_DEVELOPER", it.getString("error")) }
     }
 
-    /** Lucía runs a tool on the phone through the same handler, only while «Redireccionar a Hub» is on. */
+    /** Lucía runs a tool on the phone through the same handler, with or without the public link; Arka turns that on and off. */
     @Test fun luciaRunsToolsOnThePhone() {
         val relay = com.zirakusa.filem.mcp.McpMode.relayUrl
         com.zirakusa.filem.mcp.McpMode.relayUrl = ""                                             // no relay in tests
         com.zirakusa.filem.mcp.McpMode.load(org.robolectric.RuntimeEnvironment.getApplication())
-        com.zirakusa.filem.mcp.McpMode.redirect(false)
-        assertEquals(null, com.zirakusa.filem.mcp.McpMode.local("{}"))
-        HubLink.connect(true); assertTrue(com.zirakusa.filem.mcp.McpMode.hubRedirect)                // «Conectar todas»
+        com.zirakusa.filem.mcp.McpMode.turnRemote(false)
         val list = JSONObject(com.zirakusa.filem.mcp.McpMode.local("""{"jsonrpc":"2.0","id":1,"method":"tools/list"}""")!!)
         assertTrue(list.getJSONObject("result").getJSONArray("tools").length() > 0)
         val viaProvider = JSONObject(HubLink.tool(true, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").getString("response"))
         assertEquals(2, viaProvider.getInt("id"))
-        com.zirakusa.filem.mcp.McpMode.redirect(false)
+        assertEquals("BAD_REQUEST", HubLink.tool(true, "").getString("error"))
+        assertEquals("NOT_SAME_DEVELOPER", HubLink.tool(false, "{}").getString("error"))
+        assertTrue(HubLink.status(true).containsKey("remote"))
+        HubLink.connect(true); assertTrue(com.zirakusa.filem.mcp.McpMode.remote)                 // Arka › «Activar MCP»
+        assertFalse(HubLink.disconnect(true).getBoolean("remote")); assertFalse(com.zirakusa.filem.mcp.McpMode.remote)
         com.zirakusa.filem.mcp.McpMode.relayUrl = relay                                          // as the other tests expect
+    }
+
+    /** The hub's token from before Arka took over is kept, so the hub's link keeps working. */
+    @Test fun theOldHubTokenIsKept() {
+        val old = """[{"id":"a","secret":"${"l".repeat(44)}","kind":"llm"},{"id":"b","secret":"${"h".repeat(44)}","kind":"redirect"}]"""
+        assertEquals("h".repeat(44), com.zirakusa.filem.mcp.Legacy.redirectSecret(old))
+        assertEquals(null, com.zirakusa.filem.mcp.Legacy.redirectSecret("[]"))
+        assertEquals(null, com.zirakusa.filem.mcp.Legacy.redirectSecret(""))
     }
 }

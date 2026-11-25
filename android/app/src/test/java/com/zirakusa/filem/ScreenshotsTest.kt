@@ -54,8 +54,7 @@ class ScreenshotsTest {
     private val actions = object : Actions {
         override fun open(item: FileItem) { opened += item.path }
         override fun share(paths: List<String>) {}
-        override fun copyLink(text: String) {}
-        override fun goToHub() {}
+        override fun openArka() {}
     }
 
     private fun storage() = tmp.newFolder("storage").also { root ->

@@ -6,6 +6,6 @@ import com.zirakusa.filem.data.FileItem
 interface Actions {
     fun open(item: FileItem)
     fun share(paths: List<String>)
-    fun copyLink(text: String)
-    fun goToHub()
+    /** Opens Arka, where the Modo MCP is turned on. */
+    fun openArka()
 }

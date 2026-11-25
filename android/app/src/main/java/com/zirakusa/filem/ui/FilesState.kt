@@ -28,7 +28,6 @@ sealed interface Screen {
     data object Search : Screen
     data object Trash : Screen
     data object Settings : Screen
-    data object Mcp : Screen
 }
 
 /** Copy or move waiting for «Pegar aquí». */
@@ -93,7 +92,6 @@ class FilesState(val store: FileStore, private val prefs: Prefs?, private val sc
             Screen.Starred -> items = FileRules.sorted(starred.mapNotNull { runCatching { store.info(it) }.getOrNull() }, sort)
             Screen.Trash, Screen.Settings -> trash = store.trashed()
             Screen.Search -> Unit
-            Screen.Mcp -> Unit
         }
     }
 
