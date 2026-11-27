@@ -52,7 +52,7 @@ class McpHandler(private val tokens: () -> List<Token>, private val store: () ->
                     if (token.access == Access.READ) "This token is read-only." else "files_create_folder, files_rename, files_copy, " +
                         "files_move and files_trash (to Filem's trash, restorable for 30 days) change them; nothing is deleted for good.")
                 .put("_meta", JSONObject().put(TOKEN_META, JSONObject().put("name", token.name).put("kind", "redirect").put("mode", token.access.key)))
-            "ping" -> JSONObject()
+            "ping" -> McpProbeReceipt.accept(id)
             "tools/list" -> JSONObject().put("tools", JSONArray(FileTools.available(token.access).map {
                 JSONObject().put("name", it.name).put("description", it.description).put("inputSchema", it.schema)
                     .put("annotations", JSONObject().put("readOnlyHint", !it.write).put("destructiveHint", it.name == "files_trash"))

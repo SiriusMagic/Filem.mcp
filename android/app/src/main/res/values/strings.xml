@@ -88,7 +88,7 @@
     <string name="permission_title">Permite el acceso a tus archivos</string>
     <string name="permission_text">Filem es un administrador de archivos: necesita «Acceso a todos los archivos» para ver y ordenar tus carpetas. Nada sale del teléfono.</string>
     <string name="permission_button">Dar acceso</string>
-    <string name="mcp_settings_hint">Lo controla Arka: activarlo, permitirlo en local y crear tokens.</string>
+    <string name="mcp_settings_hint">Configura el acceso local y la redirección a Hub.</string>
     <string name="mcp_status_off">Apagado</string>
     <string name="mcp_connecting">Conectando…</string>
     <string name="mcp_offline">Sin conexión</string>
@@ -113,5 +113,5 @@
     <string name="icon_glossy">Brillante</string>
     <string name="icon_soft">Suave</string>
     <string name="icon_hint">Cambia el icono de la pantalla de inicio. Algunos lanzadores tardan unos segundos en mostrarlo.</string>
-    <string name="mcp_no_arka">Instala Arka para activar el Modo MCP.</string>
+    <string name="mcp_no_arka">Instala Arka para administrar los enlaces del Hub.</string>
 </resources>

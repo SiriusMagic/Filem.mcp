@@ -39,7 +39,7 @@ import com.zirakusa.filem.ui.theme.FilemColors
             Text(stringResource(R.string.mcp_title), fontSize = 18.sp, color = FilemColors.Text)
             Text(stringResource(R.string.mcp_settings_hint), color = FilemColors.Muted)
             Text(stringResource(when {
-                !McpMode.remote -> R.string.mcp_status_off
+                !McpMode.active -> R.string.mcp_status_off
                 McpMode.state == RelayLink.State.ONLINE -> R.string.mcp_online
                 McpMode.state == RelayLink.State.CONNECTING -> R.string.mcp_connecting
                 else -> R.string.mcp_offline
